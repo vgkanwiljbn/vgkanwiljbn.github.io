@@ -150,6 +150,7 @@
             background-color: #e0e0e0;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 
 <body>
@@ -159,10 +160,9 @@
         <input type="text" id="name" placeholder="Enter your name" required>
         <label for="unit">Unit:</label>
         <input type="text" id="unit" placeholder="Enter your unit" required>
-        <label for="new-voucher">Add Voucher:</label>
+        <label for="new-voucher">Add Voucher</label>
         <input type="text" id="new-voucher" placeholder="Enter new voucher" required>
-        <button id="add-voucher">Add Voucher</button>
-        <button id="reset-storage" style="margin-top: 10px;">Reset</button>
+        <button id="add-voucher">Add Voucher <i class="fas fa-plus"></i></button>
     </div>
     <h2>Voucher List</h2>
     <ul id="voucher-list" class="voucher-list" style="text-align: center;"></ul>
@@ -174,11 +174,18 @@
                 <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Name</th>
                 <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Unit</th>
                 <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Claimed Voucher</th>
+                <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Date & Time</th>
+                <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">PDF</th>
             </tr>
         </thead>
         <tbody id="history-list"></tbody>
     </table>
 
+    <button id="download-pdf" style="margin-top: 10px; background-color: blue;">Download History</button>
+    <button id="reset-storage" style="margin-top: 10px; background-color: black;">Reset <i
+            class="fas fa-power-off"></i></button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script>
         const voucherList = document.getElementById('voucher-list');
         const nameInput = document.getElementById('name');
@@ -224,7 +231,10 @@
             voucherData.forEach(voucher => {
                 const li = document.createElement('li');
                 li.className = 'voucher-item';
-                li.innerHTML = `${voucher} <button class="delete-voucher">Delete</button>`;
+                // ... existing code ...
+                li.innerHTML = `${voucher} <i class="fas fa-trash-alt delete-voucher" style="cursor: pointer;"></i>`;
+                // ... existing code ...
+
                 voucherList.appendChild(li);
             });
         };
@@ -248,6 +258,7 @@
         const addVoucher = () => {
             const newVoucherInput = document.getElementById('new-voucher');
             const newVoucher = newVoucherInput.value.trim();
+            const dateTime = new Date().toLocaleString(); // Ambil tanggal dan waktu saat ini
 
             if (newVoucher) {
                 const voucherList = document.getElementById('voucher-list');
@@ -297,16 +308,106 @@
             const historyData = JSON.parse(localStorage.getItem('voucherHistory')) || [];
 
             historyData.forEach(item => {
-                const [name, unit, claimedVoucher] = item.split('|');
+                const [name, unit, claimedVoucher, dateTime] = item.split('|');
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${name}</td>
                     <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${unit}</td>
-                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${claimedVoucher}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">
+                        ${claimedVoucher} 
+                        <i class="far fa-copy copy-voucher" data-clipboard-text="${claimedVoucher}" style="cursor: pointer;"></i>
+                    </td>
+                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${dateTime}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">
+                        <button class="download-row-pdf" style="background-color:blue;">Download PDF</button>
+                    </td>
                 `;
                 historyList.appendChild(row);
             });
         };
+
+        // Tambahkan logika untuk menambahkan baris baru ke history
+        const addHistoryEntry = (name, unit, selectedVoucher, dateTime) => {
+            const historyList = document.getElementById('history-list');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="border: 1px solid #ccc; padding: 8px;">${name}</td>
+                <td style="border: 1px solid #ccc; padding: 8px;">${unit}</td>
+                <td style="border: 1px solid #ccc; padding: 8px;">${selectedVoucher}</td>
+                <td style="border: 1px solid #ccc; padding: 8px;">${dateTime}</td>
+                <td style="border: 1px solid #ccc; padding: 8px;">
+                    <button class="download-row-pdf">Download PDF</button>
+                </td>
+            `;
+            historyList.appendChild(row);
+        };
+
+        // Fungsi untuk mengunduh riwayat sebagai PDF untuk setiap baris
+        const downloadRowAsPDF = (name, unit, claimedVoucher, dateTime) => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Pengaturan margin dan gaya teks
+            const marginX = 14;
+            let y = 20;
+
+            // Judul dengan font lebih besar
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("Voucher Grab", 105, y, null, null, "center");
+            y += 10;
+
+            // Garis pemisah di bawah judul
+            doc.setLineWidth(0.5);
+            doc.line(10, y, 200, y);
+            y += 10;
+
+            // Menambahkan detail dengan gaya teks
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Name:`, marginX, y);
+            doc.setFont("helvetica", "bold");
+            doc.text(name, marginX + 50, y);
+            y += 10;
+
+            doc.setFont("helvetica", "normal");
+            doc.text(`Unit:`, marginX, y);
+            doc.setFont("helvetica", "bold");
+            doc.text(unit, marginX + 50, y);
+            y += 10;
+
+            doc.setFont("helvetica", "normal");
+            doc.text(`Claimed Voucher:`, marginX, y);
+            doc.setFont("helvetica", "bold");
+            doc.text(claimedVoucher, marginX + 50, y);
+            y += 10;
+
+            doc.setFont("helvetica", "normal");
+            doc.text(`Date & Time:`, marginX, y);
+            doc.setFont("helvetica", "bold");
+            doc.text(dateTime, marginX + 50, y);
+            y += 10;
+
+            // Garis pemisah di bawah konten
+            doc.setLineWidth(0.5);
+            doc.line(10, y, 200, y);
+
+            // Mengunduh file PDF
+            doc.save(`${name}_grab_voucher.pdf`);
+        };
+
+        // Event listener untuk tombol download PDF di setiap baris
+        document.getElementById("history-list").addEventListener("click", (event) => {
+            if (event.target.classList.contains("download-row-pdf")) {
+                const row = event.target.closest("tr");
+                const name = row.cells[0].textContent.trim();
+                const unit = row.cells[1].textContent.trim();
+                const claimedVoucher = row.cells[2].textContent.trim();
+                const dateTime = row.cells[3].textContent.trim();
+                downloadRowAsPDF(name, unit, claimedVoucher, dateTime);
+            }
+        });
+
 
         // Panggil fungsi untuk memuat history saat halaman dimuat
         loadHistory();
@@ -315,6 +416,7 @@
         const handleVoucherSelection = async (event) => {
             const name = document.getElementById('name').value.trim();
             const unit = document.getElementById('unit').value.trim();
+            const dateTime = new Date().toLocaleString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
             if (!name || !unit) {
                 alert('Please enter your name and unit before selecting a voucher!');
@@ -324,24 +426,23 @@
             if (event.target.classList.contains('voucher-item') && !event.target.classList.contains('used')) {
                 const selectedVoucher = event.target.textContent.split(' ')[0]; // Ambil nama voucher
 
+                // Tambahkan konfirmasi sebelum memilih voucher
+                const confirmation = confirm(`Yakin memilih voucher ${selectedVoucher} ini?`);
+                if (!confirmation) {
+                    return; // Jika tidak yakin, keluar dari fungsi
+                }
+
                 // Tambahkan ke history
-                const historyList = document.getElementById('history-list');
-                const row = document.createElement('tr');
-                const historyText = `${name}|${unit}|${selectedVoucher}`; // Format data untuk disimpan
-                row.innerHTML = `
-                    <td style="border: 1px solid #ccc; padding: 8px;">${name}</td>
-                    <td style="border: 1px solid #ccc; padding: 8px;">${unit}</td>
-                    <td style="border: 1px solid #ccc; padding: 8px;">${selectedVoucher}</td>
-                `;
-                historyList.appendChild(row);
+                addHistoryEntry(name, unit, selectedVoucher, dateTime);
 
                 // Simpan history ke localStorage
                 const historyData = JSON.parse(localStorage.getItem('voucherHistory')) || [];
+                const historyText = `${name}|${unit}|${selectedVoucher}|${dateTime}`;
                 historyData.push(historyText);
                 localStorage.setItem('voucherHistory', JSON.stringify(historyData));
 
                 // Tandai voucher sebagai digunakan
-                event.target.classList.add('used'); // Tandai voucher sebagai digunakan
+                event.target.classList.add('used');
 
                 // Simpan voucher yang digunakan ke localStorage
                 const usedVouchers = JSON.parse(localStorage.getItem('usedVouchers')) || [];
@@ -355,6 +456,86 @@
 
         // Fetch initial voucher status
         fetchVoucherStatus();
+
+        // Fungsi untuk mengunduh history sebagai PDF
+        const downloadHistoryAsPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Menambahkan judul dengan font lebih besar
+            doc.setFontSize(16);
+            doc.text("Voucher History", 105, 16, null, null, "center");
+
+            // Menambahkan header tabel
+            doc.setFontSize(12);
+            let y = 30; // Posisi Y untuk baris tabel
+            doc.text("Name", 14, y);
+            doc.text("Unit", 70, y);
+            doc.text("Voucher", 120, y);
+            doc.text("Date & Time", 150, y);
+            doc.setLineWidth(0.5);
+            doc.line(10, y + 2, 200, y + 2); // Garis pemisah header
+            y += 20;
+
+            // Mengambil data dari tabel history
+            const historyRows = Array.from(document.querySelectorAll('#history-list tr'));
+
+            // Menambahkan data ke PDF
+            historyRows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                if (cols.length > 0) {
+                    const name = cols[0].textContent.trim();
+                    const unit = cols[1].textContent.trim();
+                    const voucher = cols[2].textContent.trim();
+                    const dateTime = cols[3].textContent.trim();
+
+                    // Menambahkan data dengan posisi rapi
+                    doc.text(name, 14, y);
+                    doc.text(unit, 70, y);
+                    doc.text(voucher, 120, y);
+
+                    // Membatasi panjang kolom Date & Time agar tidak terpotong
+                    const dateTimeWrapped = doc.splitTextToSize(dateTime, 40); // Bungkus teks jika lebih dari 40px
+                    doc.text(dateTimeWrapped, 150, y);
+
+                    y += 20;
+
+                    // Jika posisi Y mendekati batas bawah halaman, tambahkan halaman baru
+                    if (y > 280) {
+                        doc.addPage();
+                        y = 30; // Reset posisi Y untuk halaman baru
+                        // Menambahkan ulang header tabel
+                        doc.text("Name", 14, y);
+                        doc.text("Unit", 70, y);
+                        doc.text("Voucher", 120, y);
+                        doc.text("Date & Time", 150, y);
+                        doc.line(10, y + 2, 200, y + 2); // Garis pemisah header
+                        y += 20;
+                    }
+                }
+            });
+
+            // Mengunduh file PDF
+            doc.save("grab_voucher_history.pdf");
+        };
+
+
+
+
+        // Event listener untuk tombol download PDF
+        document.getElementById('download-pdf').addEventListener('click', downloadHistoryAsPDF);
+
+        // Event listener untuk tombol salin voucher
+        document.getElementById("history-list").addEventListener("click", (event) => {
+            if (event.target.classList.contains("copy-voucher")) {
+                const voucherCode = event.target.getAttribute("data-clipboard-text");
+                navigator.clipboard.writeText(voucherCode).then(() => {
+                    alert('Kode voucher telah disalin ke clipboard!');
+                }).catch(err => {
+                    console.error('Gagal menyalin kode voucher: ', err);
+                });
+            }
+        });
     </script>
 </body>
 
