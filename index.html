@@ -113,7 +113,7 @@
             background-color: #d9534f;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 0px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
@@ -149,6 +149,58 @@
         .history-item:hover {
             background-color: #e0e0e0;
         }
+
+        /* Tambahkan aturan untuk meningkatkan responsivitas */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .form-container {
+                padding: 15px;
+            }
+
+            input[type="text"],
+            button {
+                padding: 8px;
+            }
+
+            h1,
+            h2 {
+                font-size: 1.5em;
+                /* Ukuran font lebih kecil di perangkat kecil */
+            }
+
+            table {
+                font-size: 14px;
+                /* Ukuran font tabel lebih kecil */
+            }
+
+            .voucher-item {
+                font-size: 14px;
+                /* Ukuran font item voucher lebih kecil */
+            }
+
+            .delete-voucher {
+                font-size: 12px;
+                /* Ukuran font tombol hapus lebih kecil */
+            }
+        }
+
+        /* Tambahkan aturan untuk tampilan yang lebih baik di perangkat kecil */
+        @media (max-width: 480px) {
+
+            h1,
+            h2 {
+                font-size: 1.2em;
+                /* Ukuran font lebih kecil di perangkat sangat kecil */
+            }
+
+            .form-container {
+                margin-bottom: 10px;
+                /* Mengurangi margin untuk perangkat kecil */
+            }
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -170,8 +222,8 @@
         <button id="add-voucher"
             style="background-color: #5cb85c; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer;">Add
             New Voucher <i class="fas fa-plus"></i></button>
+        <ul id="voucher-list" class="voucher-list" style="text-align: center;"></ul>
     </div>
-    <ul id="voucher-list" class="voucher-list" style="text-align: center;"></ul>
 
     <h2>History</h2>
     <table id="history-table" style="width: 100%; border-collapse: collapse;">
