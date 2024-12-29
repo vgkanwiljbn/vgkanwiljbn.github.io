@@ -160,11 +160,17 @@
         <input type="text" id="name" placeholder="Enter your name" required>
         <label for="unit">Unit:</label>
         <input type="text" id="unit" placeholder="Enter your unit" required>
-        <label for="new-voucher">Add Voucher</label>
-        <input type="text" id="new-voucher" placeholder="Enter new voucher" required>
-        <button id="add-voucher">Add Voucher <i class="fas fa-plus"></i></button>
     </div>
+
     <h2>Voucher List</h2>
+    <div class="form-container">
+        <label for="new-voucher">Add New Voucher</label>
+        <input type="text" id="new-voucher" placeholder="Enter new voucher" required
+            style="border: 2px solid #5cb85c; border-radius: 4px; padding: 10px;" />
+        <button id="add-voucher"
+            style="background-color: #5cb85c; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer;">Add
+            New Voucher <i class="fas fa-plus"></i></button>
+    </div>
     <ul id="voucher-list" class="voucher-list" style="text-align: center;"></ul>
 
     <h2>History</h2>
